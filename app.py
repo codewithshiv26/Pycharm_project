@@ -1,35 +1,44 @@
-from dash import Dash, Input, Output, dcc
-import dash_bootstrap_components as dbc
+from dash import Dash, html, Input, Output, dcc
+import plotly.express as px
 
-app = Dash(__name__, external_stylesheets=[dbc.themes.SOLAR])
+df = px.data.iris()
 
+app = Dash(__name__)
 server = app.server
 
-app.layout = dbc.Container([
-    dbc.Input(
-        id='my_text',
-        value='Type Text new now',
-        type='text',
-        debounce=False,
-        className='mb-3 mt-3'
+app.layout = html.Div([
+    html.H1("Iris Flower Analysis Dashboard"),
+    html.Label("Select Flower Species"),
+    dcc.Dropdown(
+        id="species_dropdown",
+        options=[
+            {"label": "Setosa", "value": "setosa"},
+            {"label": "Versicolor", "value": "versicolor"},
+            {"label": "Virginica", "value": "virginica"},
+        ],
+        value="setosa",
+        clearable=False,
     ),
-
-    dcc.Markdown(
-        id='my_output',
-        children=''
-    ),
+    dcc.Graph(id="iris_graph"),
 ])
 
 
 @app.callback(
-    Output(component_id='my_output', component_property='children'),
-    Input(component_id='my_text', component_property='value')
+    Output("iris_graph", "figure"),
+    Input("species_dropdown", "value"),
 )
-def update_text(el_texto):
-    return el_texto
+def update_graph(selected_species):
+    filtered_df = df[df["species"] == selected_species]
+
+    fig = px.scatter(
+        filtered_df,
+        x="sepal_width",
+        y="sepal_length",
+        color="species",
+        title=f"Iris Analysis: {selected_species}",
+    )
+    return fig
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
-
-
